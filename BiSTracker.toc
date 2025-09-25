@@ -1,8 +1,8 @@
 ## Interface: 110100
 ## Title: BiS Tracker
-## Notes: This is my very first addon!
+## Notes: Best-in-slot item tracker
 ## Author: Halm4D
-## Version: 0.0.1
+## Version: 1.0.0
 ## SavedVariables: BiSTrackerDB
 
 BiSTracker.lua

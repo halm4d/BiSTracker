@@ -2,54 +2,93 @@ local function OnEvent(self, event, ...)
     if event == "PLAYER_ENTERING_WORLD" then
         local isLogin, isReload = ...
         print(event, isLogin, isReload)
+    elseif event == "ADDON_LOADED" then
+        local addonName = ...
+        if addonName == "BiSTracker" then
+            if not BiSTrackerDB then
+                BiSTrackerDB = {}
+            end
+            -- Set default values if not already set
+            if BiSTrackerDB.enableAlerts == nil then
+                BiSTrackerDB.enableAlerts = true -- Default to enabled
+            end
+
+            local itemID = GetInventoryItemID("player", 1)
+            BiSTrackerDB.lastEquippedHelm = itemID
+            print("Saved itemID: " .. (itemID or "none"))
+
+            -- Register CHAT_MSG_LOOT only if alerts are enabled
+            UpdateLootEventRegistration()
+        end
+    elseif event == "CHAT_MSG_LOOT" then
+        local msg = ...
+        local itemLink = msg:match("|Hitem:.-|h.-|h")
+        if itemLink then
+            if IsItemUpgrade(itemLink) then
+                SendAlert(Colorize("BiS item dropped!", "00FF00"))
+            end
+        end
     end
 end
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", OnEvent)
-f:SetScript("OnEvent", function(self, event, addonName)
-    if addonName == "BiSTracker" then
-        if not BiSTrackerDB then
-            BiSTrackerDB = {}
-        end
-        local itemID = GetInventoryItemID("player", 1)
-        BiSTrackerDB.lastEquippedHelm = itemID
-        print("Saved itemID: " .. (itemID or "none"))
-    end
-end)
 
---- @return string|nil 
-local function GetCurrentPlayerClassAndSpec()
-    local _, englishClass, _ = UnitClass("player")
-    local _, specName, _, _, _ = GetSpecializationInfo(GetSpecialization())
-    if not specName then
-        print("Could not determine specialization.")
-        return nil
+-- Function to register/unregister CHAT_MSG_LOOT based on settings
+function UpdateLootEventRegistration()
+    if BiSTrackerDB and BiSTrackerDB.enableAlerts then
+        f:RegisterEvent("CHAT_MSG_LOOT")
+        print("BiS Tracker: Loot alerts enabled")
+    else
+        f:UnregisterEvent("CHAT_MSG_LOOT")
+        print("BiS Tracker: Loot alerts disabled")
     end
-    return englishClass:lower() .. "_" .. specName:lower()
 end
 
-local function Colorize(text, hex)
+--- @return string|nil
+function GetCurrentPlayerClassAndSpec()
+    local _, englishClassName, _ = UnitClass("player")
+    local _, specName, _, _, _ = GetSpecializationInfo(GetSpecialization())
+    if not specName then
+        return nil
+    end
+    return englishClassName:lower() .. "_" .. specName:lower()
+end
+
+function Colorize(text, hex)
     return "|cFF" .. hex .. text .. "|r"
 end
 
-local function IsItemUpgrade(itemLink)
+function SendAlert(message)
+    local alert = CreateFrame("Frame", nil, UIParent)
+    alert:SetSize(800, 200)
+    alert:SetPoint("CENTER", UIParent, "CENTER")
+
+    local text = alert:CreateFontString(nil, "OVERLAY", "Game72Font_Shadow")
+    text:SetPoint("CENTER")
+    text:SetText(message)
+
+    PlaySound(SOUNDKIT.RAID_WARNING, "Master")
+
+    alert:Show()
+    C_Timer.After(3, function() alert:Hide() end)
+end
+
+function IsItemUpgrade(itemLink)
     local itemID = tonumber(itemLink:match("item:(%d+):"))
     if not itemID then 
-        print("Invalid item link. " .. (itemID or "no itemID found") .. " in link: " .. itemLink)
         return false
     end
 
     local currentClassSpec = GetCurrentPlayerClassAndSpec()
-    if not currentClassSpec then 
-        print("Could not determine class/spec.")
+    if not currentClassSpec then
         return false
     end
 
-    local currentBiSData = BiSTrackerData[currentClassSpec]
-    if not currentBiSData then 
-        print("No BiS data available for your class/spec.")
+    local currentBiSData = GetCurrentPlayerBiSGear()
+    if not currentBiSData then
         return false
     end
 
@@ -63,23 +102,31 @@ local function IsItemUpgrade(itemLink)
     return false
 end
 
-f:RegisterEvent("CHAT_MSG_LOOT")
-f:SetScript("OnEvent", function(self, event, msg, ...)
-    if event ~= "CHAT_MSG_LOOT" then return end
-    local itemLink = msg:match("|Hitem:.-|h.-|h")
-    if itemLink then
-        print("New loot detected: " .. itemLink)
-        if IsItemUpgrade(itemLink) then
-            print(Colorize("This item is an upgrade!", "00FF00"))
-        end
+-- Slash command to toggle alerts
+SLASH_BIS_ALERTS1 = "/bis-alerts"
+SlashCmdList["BIS_ALERTS"] = function(msg)
+    if not BiSTrackerDB then
+        BiSTrackerDB = {}
     end
-end)
 
-SLASH_BIS1 = "/bis"
-SlashCmdList["BIS"] = function()
+    if msg == "on" then
+        BiSTrackerDB.enableAlerts = true
+        UpdateLootEventRegistration()
+    elseif msg == "off" then
+        BiSTrackerDB.enableAlerts = false
+        UpdateLootEventRegistration()
+    else
+        -- Toggle
+        BiSTrackerDB.enableAlerts = not BiSTrackerDB.enableAlerts
+        UpdateLootEventRegistration()
+    end
+
+    print("BiS Tracker: Alerts are now " .. (BiSTrackerDB.enableAlerts and "enabled" or "disabled"))
+end
+
+function GetCurrentPlayerBiSGear()
     local CurrentPlayerBiSGear = BiSTrackerData[GetCurrentPlayerClassAndSpec()]
     if not CurrentPlayerBiSGear then
-        print("No BiS data available for your class/spec.")
         return
     end
     for _, slotData in ipairs(CurrentPlayerBiSGear) do
@@ -99,6 +146,15 @@ SlashCmdList["BIS"] = function()
             slotData.equipped = false
             slotData.upgradeable = true
         end
+    end
+    return CurrentPlayerBiSGear
+end
+
+SLASH_BIS1 = "/bis"
+SlashCmdList["BIS"] = function()
+    local CurrentPlayerBiSGear = GetCurrentPlayerBiSGear()
+    if not CurrentPlayerBiSGear then
+        return
     end
 
     print(Colorize("Missing BiS Gear for " .. GetCurrentPlayerClassAndSpec() .. ":", "FFD700"))

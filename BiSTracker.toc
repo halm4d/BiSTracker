@@ -6,4 +6,6 @@
 ## SavedVariables: BiSTrackerDB
 
 BiSTracker.lua
-BiSTracker_Data.lua
+BiSTrackerData.lua
+BiSTrackerUI.lua
+BiSTrackerSettings.lua

@@ -94,7 +94,11 @@ function IsItemUpgrade(itemLink)
 
     for _, slotData in ipairs(currentBiSData) do
         for _, bisItem in pairs(slotData.BiSItems) do
-            if bisItem.itemID == itemID then
+            if bisItem.overall.itemID == itemID then
+                return true
+            elseif bisItem.raid.itemID == itemID then
+                return true
+            elseif bisItem.mythic_plus.itemID == itemID then
                 return true
             end
         end

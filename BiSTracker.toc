@@ -5,7 +5,21 @@
 ## Version: 1.0.0
 ## SavedVariables: BiSTrackerDB
 
-BiSTracker.lua
+# Core files
+Core\Constants.lua
+Core\Utils.lua
+Core\Settings.lua
+Core\DataManager.lua
+Core\Events.lua
+Core\Alerts.lua
+Core\Commands.lua
+
+# UI files
+UI\MainUI.lua
+UI\SettingsUI.lua
+
+# Data files
 BiSTrackerData.lua
-BiSTrackerUI.lua
-BiSTrackerSettings.lua
+
+# Main file
+BiSTracker.lua

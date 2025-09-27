@@ -2,6 +2,29 @@
 
 All notable changes to BiS Tracker will be documented in this file.
 
+## [1.1.0] - 2025-09-27
+
+### Added
+- **NEW MODERN UI**: Complete redesign with tabbed interface
+  - **BiS Items Tab**: Clean view of BiS items with three subtabs:
+    - Overall: Best overall items across all content
+    - Raid: Best items specifically for raid content
+    - Mythic+: Best items specifically for mythic+ content
+  - **Settings Tab**: All settings consolidated in one modern interface
+  - Modern color scheme with dark theme
+  - Improved responsiveness and user experience
+  - Better item status indicators (Equipped, Not Equipped, Upgradeable)
+  - Professional hover effects and visual feedback
+  - Resizable interface with proper bounds
+- Enhanced slash command support for new UI
+- Backward compatibility with original UI
+
+### Improved
+- Better visual feedback for item status
+- More intuitive navigation with tab-based interface
+- Enhanced readability with improved typography
+- Cleaner item source information display
+
 ## [1.0.1] - 2025-09-27
 
 ### Added

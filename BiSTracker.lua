@@ -17,6 +17,7 @@ function BiSTracker:Initialize()
 
     -- Initialize UI components
     self.UI.Initialize()
+    self.ModernUI.Initialize()  -- Initialize the new modern UI
     self.SettingsUI.Initialize()
 
     -- Mark as initialized

@@ -356,7 +356,13 @@ function BiSTracker.UI.CreateMinimapButton()
     texture:SetTexture("Interface\\Icons\\INV_Jewelry_Ring_Ahnqiraj_02")
 
     -- Event handlers
-    minimapButton:SetScript("OnClick", BiSTracker.UI.ToggleMainFrame)
+    minimapButton:SetScript("OnClick", function()
+        if BiSTracker.ModernUI and BiSTracker.ModernUI.ToggleMainFrame then
+            BiSTracker.ModernUI.ToggleMainFrame()
+        else
+            BiSTracker.UI.ToggleMainFrame()
+        end
+    end)
     minimapButton:SetScript("OnEnter", BiSTracker.UI.ShowMinimapTooltip)
     minimapButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
     minimapButton:SetScript("OnDragStart", function(self) self:StartMoving() end)

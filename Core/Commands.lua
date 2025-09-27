@@ -17,7 +17,9 @@ SlashCmdList["BISTRACKER"] = function(msg)
     if command == "show" or command == "" then
         BiSTracker.Commands.ShowBiSList()
     elseif command == "ui" or command == "window" then
-        if BiSTracker.UI and BiSTracker.UI.ToggleMainFrame then
+        if BiSTracker.ModernUI and BiSTracker.ModernUI.ToggleMainFrame then
+            BiSTracker.ModernUI.ToggleMainFrame()
+        elseif BiSTracker.UI and BiSTracker.UI.ToggleMainFrame then
             BiSTracker.UI.ToggleMainFrame()
         else
             BiSTracker.Utils.PrintError("UI module not loaded")

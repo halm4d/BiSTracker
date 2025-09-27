@@ -1,8 +1,8 @@
 ## Interface: 110100
 ## Title: BiS Tracker
-## Notes: Best-in-slot item tracker
+## Notes: Best-in-slot item tracker with modern tabbed interface
 ## Author: Halm4D
-## Version: 1.0.1
+## Version: 1.1.0
 ## SavedVariables: BiSTrackerDB
 
 # Core files
@@ -16,6 +16,7 @@ Core\Commands.lua
 
 # UI files
 UI\MainUI.lua
+UI\ModernUI.lua
 UI\SettingsUI.lua
 
 # Data files

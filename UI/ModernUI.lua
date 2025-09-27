@@ -19,7 +19,21 @@ end
 local mainFrame = nil
 local currentTab = "bisitems"
 local currentSubTab = "overall"
+local currentDungeonFilter = "all" -- New: current dungeon filter
 local initialized = false
+
+-- Current TWW Season 1 Mythic+ Dungeons
+local MYTHIC_PLUS_DUNGEONS = {
+    "all",
+    "Ara-Kara, City of Echoes",
+    "Dawnbreaker", 
+    "Priory of the Sacred Flame",
+    "Eco-Dome Al'dani",
+    "Halls of Atonement",
+    "Operation: Floodgate",
+    "Tazavesh: So'leah's Gambit",
+    "Tazavesh: Streets of Wonder"
+}
 
 -- Constants for modern UI
 local MODERN_UI = {
@@ -336,6 +350,7 @@ function BiSTracker.ModernUI.CreateSubTabs()
 
         btn:SetScript("OnClick", function()
             currentSubTab = subTab.key
+            currentDungeonFilter = "all" -- Reset filter when switching subtabs
             BiSTracker.ModernUI.UpdateSubTabAppearance()
             BiSTracker.ModernUI.ShowBiSContent()
         end)
@@ -376,9 +391,69 @@ function BiSTracker.ModernUI.UpdateSubTabAppearance()
     end
 end
 
+-- Create dungeon filter dropdown for Mythic+ tab
+function BiSTracker.ModernUI.CreateDungeonFilter()
+    if not mainFrame or not mainFrame.content or not mainFrame.subTabFrame then return end
+    
+    -- Remove existing filter if it exists
+    if mainFrame.dungeonFilter then
+        mainFrame.dungeonFilter:Hide()
+        mainFrame.dungeonFilter = nil
+    end
+    
+    -- Create filter frame
+    local filterFrame = CreateFrame("Frame", nil, mainFrame.content)
+    filterFrame:SetSize(mainFrame.content:GetWidth() - 40, 35)
+    filterFrame:SetPoint("TOPLEFT", mainFrame.subTabFrame, "BOTTOMLEFT", 20, -10)
+    
+    -- Filter label
+    local label = filterFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    label:SetPoint("LEFT", filterFrame, "LEFT", 10, 0)
+    label:SetText("Dungeon: ")
+    label:SetTextColor(unpack(COLORS.TEXT_GOLD))
+    
+    -- Create dropdown button
+    local dropdown = CreateFrame("Button", nil, filterFrame, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("LEFT", label, "RIGHT", 10, 0)
+    
+    -- Initialize dropdown
+    UIDropDownMenu_SetWidth(dropdown, 180)
+    UIDropDownMenu_SetText(dropdown, currentDungeonFilter == "all" and "All Dungeons" or currentDungeonFilter)
+    
+    -- Dropdown menu function
+    local function DropdownMenu_Initialize(self, level)
+        local info = UIDropDownMenu_CreateInfo()
+        
+        for _, dungeon in ipairs(MYTHIC_PLUS_DUNGEONS) do
+            info.text = dungeon == "all" and "All Dungeons" or dungeon
+            info.value = dungeon
+            info.func = function()
+                currentDungeonFilter = dungeon
+                UIDropDownMenu_SetText(dropdown, dungeon == "all" and "All Dungeons" or dungeon)
+                CloseDropDownMenus()
+                BiSTracker.ModernUI.ShowBiSContent() -- Reload with new filter
+            end
+            info.checked = (currentDungeonFilter == dungeon)
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+    
+    UIDropDownMenu_Initialize(dropdown, DropdownMenu_Initialize)
+    
+    mainFrame.dungeonFilter = filterFrame
+end
+
 -- Show BiS content based on current subtab
 function BiSTracker.ModernUI.ShowBiSContent()
     if not mainFrame or not mainFrame.content or not mainFrame.subTabFrame then return end
+
+    -- Create dungeon filter for Mythic+ tab
+    if currentSubTab == "mythic_plus" then
+        BiSTracker.ModernUI.CreateDungeonFilter()
+    elseif mainFrame.dungeonFilter then
+        -- Hide filter if not on mythic+ tab
+        mainFrame.dungeonFilter:Hide()
+    end
 
     -- Clear existing scroll frame if it exists
     if mainFrame.scrollFrame then
@@ -409,7 +484,13 @@ function BiSTracker.ModernUI.ShowBiSContent()
 
         -- Create scroll frame for items
         local scrollFrame = CreateFrame("ScrollFrame", nil, mainFrame.content, "UIPanelScrollFrameTemplate")
-        scrollFrame:SetPoint("TOPLEFT", mainFrame.subTabFrame, "BOTTOMLEFT", 0, -10)
+        
+        -- Position scroll frame based on whether dungeon filter exists
+        if currentSubTab == "mythic_plus" and mainFrame.dungeonFilter then
+            scrollFrame:SetPoint("TOPLEFT", mainFrame.dungeonFilter, "BOTTOMLEFT", 0, -10)
+        else
+            scrollFrame:SetPoint("TOPLEFT", mainFrame.subTabFrame, "BOTTOMLEFT", 0, -10)
+        end
         scrollFrame:SetPoint("BOTTOMRIGHT", mainFrame.content, "BOTTOMRIGHT", -25, 10)
 
 
@@ -421,11 +502,23 @@ function BiSTracker.ModernUI.ShowBiSContent()
         local yOffset = -10
         local itemCount = 0
         for _, slotData in ipairs(bisData) do
-            local itemData = BiSTracker.ModernUI.GetRelevantItemData(slotData, currentSubTab)
-            if itemData then
-                BiSTracker.ModernUI.CreateModernItemFrame(scrollChild, slotData, itemData, yOffset)
-                yOffset = yOffset - MODERN_UI.ITEM_HEIGHT - 10
-                itemCount = itemCount + 1
+            local itemDataList = BiSTracker.ModernUI.GetRelevantItemData(slotData, currentSubTab)
+            if itemDataList then
+                -- Handle both single items and arrays of items
+                local itemsToProcess = itemDataList
+                if not itemDataList[1] and itemDataList.itemID then
+                    -- Single item, convert to array
+                    itemsToProcess = {itemDataList}
+                end
+                
+                -- Process each item
+                for _, itemData in ipairs(itemsToProcess) do
+                    if itemData and itemData.itemID then
+                        BiSTracker.ModernUI.CreateModernItemFrame(scrollChild, slotData, itemData, yOffset)
+                        yOffset = yOffset - MODERN_UI.ITEM_HEIGHT - 10
+                        itemCount = itemCount + 1
+                    end
+                end
             end
         end
 
@@ -433,8 +526,15 @@ function BiSTracker.ModernUI.ShowBiSContent()
         if itemCount == 0 then
             local noItemsText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             noItemsText:SetPoint("TOP", scrollChild, "TOP", 0, -50)
-            noItemsText:SetText("No items available for " ..
-            (currentSubTab == "mythic_plus" and "Mythic+" or (currentSubTab:gsub("^%l", string.upper))))
+            
+            local messageText = "No items available for " .. 
+                (currentSubTab == "mythic_plus" and "Mythic+" or (currentSubTab:gsub("^%l", string.upper)))
+                
+            if currentSubTab == "mythic_plus" and currentDungeonFilter ~= "all" then
+                messageText = messageText .. " from " .. currentDungeonFilter
+            end
+            
+            noItemsText:SetText(messageText)
             noItemsText:SetTextColor(unpack(COLORS.TEXT_GRAY))
         end
 
@@ -446,14 +546,35 @@ end -- Get relevant item data based on subtab
 function BiSTracker.ModernUI.GetRelevantItemData(slotData, subTab)
     if not slotData or not slotData.BiSItems then return nil end
 
+    local items
     if subTab == "overall" then
-        return slotData.BiSItems.overall
+        items = slotData.BiSItems.overall
     elseif subTab == "raid" then
-        return slotData.BiSItems.raid
+        items = slotData.BiSItems.raid
     elseif subTab == "mythic_plus" then
-        return slotData.BiSItems.mythic_plus
+        items = slotData.BiSItems.mythic_plus
     end
-    return nil
+    
+    if not items then return nil end
+    
+    -- Apply dungeon filter for mythic_plus
+    if subTab == "mythic_plus" and currentDungeonFilter ~= "all" then
+        local filteredItems = {}
+        -- Handle both single item and array cases
+        local itemsToFilter = items
+        if not items[1] and items.itemID then
+            itemsToFilter = {items}
+        end
+        
+        for _, item in ipairs(itemsToFilter) do
+            if item.source and item.source:find(currentDungeonFilter, 1, true) then
+                table.insert(filteredItems, item)
+            end
+        end
+        return #filteredItems > 0 and filteredItems or nil
+    end
+    
+    return items
 end
 
 -- Create modern item frame

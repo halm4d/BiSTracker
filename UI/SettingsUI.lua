@@ -159,7 +159,9 @@ function BiSTracker.SettingsUI.OpenSettings()
     if Settings and Settings.OpenToCategory then
         Settings.OpenToCategory("BiS Tracker")
     else
-        BiSTracker.Utils.PrintError("Settings UI not available")
+        if BiSTracker.Utils and BiSTracker.Utils.PrintError then
+            BiSTracker.Utils.PrintError("Settings UI not available")
+        end
     end
 end
 

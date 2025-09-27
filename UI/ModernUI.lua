@@ -134,7 +134,9 @@ function BiSTracker.ModernUI.Initialize()
 
     BiSTracker.ModernUI.CreateMainFrame()
     initialized = true
-    BiSTracker.Utils.PrintDebug("Modern UI initialized")
+    if BiSTracker.Utils and BiSTracker.Utils.PrintDebug then
+        BiSTracker.Utils.PrintDebug("Modern UI initialized")
+    end
 end
 
 -- Main Frame Creation
@@ -208,7 +210,8 @@ function BiSTracker.ModernUI.CreateHeader()
 
     -- Class/Spec info - show loot specialization
     local playerClassName = UnitClass("player")
-    local specName = BiSTracker.Utils.GetLootSpecDisplayName() or "No Spec"
+    local specName = (BiSTracker.Utils and BiSTracker.Utils.GetLootSpecDisplayName and
+        BiSTracker.Utils.GetLootSpecDisplayName()) or "No Spec"
 
     local classSpecText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     classSpecText:SetPoint("LEFT", title, "RIGHT", 10, 0)

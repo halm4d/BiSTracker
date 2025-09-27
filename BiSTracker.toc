@@ -15,10 +15,10 @@ Core\Alerts.lua
 Core\Commands.lua
 
 # UI files
-UI\UIManager.lua
+UI\SettingsUI.lua
 UI\MinimapUI.lua
 UI\ModernUI.lua
-UI\SettingsUI.lua
+UI\UIManager.lua
 
 # Data files
 BiSTrackerData.lua

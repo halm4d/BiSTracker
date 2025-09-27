@@ -124,8 +124,7 @@ function BiSTracker.ModernUI.CreateMainFrame()
     BiSTracker.ModernUI.CreateContentArea()
     BiSTracker.ModernUI.CreateResizeGrip()
     
-    -- Initial content load
-    BiSTracker.ModernUI.RefreshContent()
+    -- Note: Content will be loaded when frame is first shown
     
     return mainFrame
 end
@@ -276,6 +275,11 @@ end
 -- Show BiS Items tab
 function BiSTracker.ModernUI.ShowBiSItemsTab()
     if not mainFrame or not mainFrame.content then return end
+    
+    -- Debug output
+    if BiSTracker.Utils and BiSTracker.Utils.PrintDebug then
+        BiSTracker.Utils.PrintDebug("ShowBiSItemsTab called")
+    end
     
     -- Clear content
     BiSTracker.ModernUI.ClearContent()
@@ -801,8 +805,10 @@ function BiSTracker.ModernUI.ToggleMainFrame()
         mainFrame:SetPropagateKeyboardInput(false)
         mainFrame:Hide()
     else
-        BiSTracker.ModernUI.RefreshContent()
         mainFrame:Show()
+        
+        -- Refresh content after showing the frame
+        BiSTracker.ModernUI.RefreshContent()
         
         -- Set up escape key handling when window is shown
         mainFrame:SetPropagateKeyboardInput(true)
@@ -821,7 +827,12 @@ end
 
 -- Refresh current content
 function BiSTracker.ModernUI.RefreshContent()
-    if not mainFrame or not mainFrame:IsShown() then return end
+    if not mainFrame then return end
+    
+    -- Debug output
+    if BiSTracker.Utils and BiSTracker.Utils.PrintDebug then
+        BiSTracker.Utils.PrintDebug("RefreshContent called, currentTab: " .. currentTab)
+    end
     
     if currentTab == "bisitems" then
         BiSTracker.ModernUI.ShowBiSItemsTab()

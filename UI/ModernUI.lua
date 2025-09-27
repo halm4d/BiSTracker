@@ -68,6 +68,56 @@ local COLORS = {
     ITEM_BG_HOVER = { 0.3, 0.3, 0.3, 0.8 },
 }
 
+-- Utility functions
+local function CreateStandardBackdrop(withBorder)
+    local backdrop = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        tile = true,
+        tileSize = 16,
+    }
+    if withBorder then
+        backdrop.edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border"
+        backdrop.edgeSize = 8
+        backdrop.insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    end
+    return backdrop
+end
+
+local function HandleItemClick(itemID)
+    if not itemID then return end
+    local itemLink = select(2, C_Item.GetItemInfo(itemID))
+    if itemLink and ChatEdit_GetActiveWindow() then
+        ChatEdit_InsertLink(itemLink)
+    elseif itemLink then
+        print("Item Link: " .. itemLink)
+    end
+end
+
+local function ShowItemTooltipSafely(itemID, frame)
+    if itemID and BiSTracker.Utils and BiSTracker.Utils.ShowItemTooltip then
+        BiSTracker.Utils.ShowItemTooltip(itemID, frame)
+    end
+end
+
+local function HideItemTooltipSafely()
+    if BiSTracker.Utils and BiSTracker.Utils.HideItemTooltip then
+        BiSTracker.Utils.HideItemTooltip()
+    end
+end
+
+local function CreateButtonWithMouseEvents(parent, template)
+    local button = CreateFrame("Button", nil, parent, template)
+    button:EnableMouse(true)
+    button:SetFrameLevel(parent:GetFrameLevel() + 1)
+    return button
+end
+
+-- Clean up keyboard handling utility
+local function CleanupKeyboardHandling(frame)
+    frame:EnableKeyboard(false)
+    frame:SetPropagateKeyboardInput(false)
+end
+
 -- Initialize Modern UI
 function BiSTracker.ModernUI.Initialize()
     if initialized then
@@ -103,14 +153,10 @@ function BiSTracker.ModernUI.CreateMainFrame()
     mainFrame:SetClampedToScreen(true)
 
     -- Set backdrop
-    mainFrame:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 }
-    })
+    local backdrop = CreateStandardBackdrop(true)
+    backdrop.edgeSize = 16
+    backdrop.insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    mainFrame:SetBackdrop(backdrop)
     mainFrame:SetBackdropColor(unpack(COLORS.BACKGROUND))
     mainFrame:SetBackdropBorderColor(unpack(COLORS.BORDER))
 
@@ -130,8 +176,7 @@ function BiSTracker.ModernUI.CreateMainFrame()
 
     -- Clean up keyboard handling when frame is hidden
     mainFrame:SetScript("OnHide", function(self)
-        self:EnableKeyboard(false)
-        self:SetPropagateKeyboardInput(false)
+        CleanupKeyboardHandling(self)
     end)
 
     -- Create UI elements
@@ -152,11 +197,7 @@ function BiSTracker.ModernUI.CreateHeader()
     local header = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
     header:SetSize(mainFrame:GetWidth(), 40)
     header:SetPoint("TOP", mainFrame, "TOP", 0, -8)
-    header:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        tile = true,
-        tileSize = 16,
-    })
+    header:SetBackdrop(CreateStandardBackdrop(false))
     header:SetBackdropColor(unpack(COLORS.HEADER))
 
     -- Title
@@ -180,9 +221,7 @@ function BiSTracker.ModernUI.CreateHeader()
     closeBtn:SetPoint("TOPRIGHT", header, "TOPRIGHT", -5, -8)
     closeBtn:SetScript("OnClick", function()
         if mainFrame then
-            -- Clean up keyboard handling
-            mainFrame:EnableKeyboard(false)
-            mainFrame:SetPropagateKeyboardInput(false)
+            CleanupKeyboardHandling(mainFrame)
             mainFrame:Hide()
         end
     end)
@@ -211,15 +250,7 @@ function BiSTracker.ModernUI.CreateTabs()
         local btn = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
         btn:SetSize(tabWidth, MODERN_UI.TAB_HEIGHT)
         btn:SetPoint("LEFT", tabFrame, "LEFT", (i - 1) * tabWidth + 5, 0)
-
-        btn:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true,
-            tileSize = 8,
-            edgeSize = 8,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
+        btn:SetBackdrop(CreateStandardBackdrop(true))
 
         -- Tab text
         local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -283,11 +314,7 @@ function BiSTracker.ModernUI.CreateContentArea()
     content:SetPoint("TOPLEFT", mainFrame.tabFrame, "BOTTOMLEFT", 0, -5)
     content:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -10, 10)
 
-    content:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        tile = true,
-        tileSize = 16,
-    })
+    content:SetBackdrop(CreateStandardBackdrop(false))
     content:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
 
     mainFrame.content = content
@@ -333,12 +360,7 @@ function BiSTracker.ModernUI.CreateSubTabs()
         local btn = CreateFrame("Button", nil, subTabFrame, "BackdropTemplate")
         btn:SetSize(subTabWidth, MODERN_UI.SUBTAB_HEIGHT)
         btn:SetPoint("LEFT", subTabFrame, "LEFT", (i - 1) * subTabWidth + 5, 0)
-
-        btn:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            tile = true,
-            tileSize = 8,
-        })
+        btn:SetBackdrop(CreateStandardBackdrop(false))
 
         local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         text:SetPoint("CENTER")
@@ -541,7 +563,9 @@ function BiSTracker.ModernUI.ShowBiSContent()
         scrollChild:SetHeight(math.max(math.abs(yOffset) + 20, 100))
         mainFrame.scrollFrame = scrollFrame
     end)
-end -- Get relevant item data based on subtab
+end
+
+-- Get relevant item data based on subtab
 
 function BiSTracker.ModernUI.GetRelevantItemData(slotData, subTab)
     if not slotData or not slotData.BiSItems then return nil end
@@ -583,14 +607,7 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
     itemFrame:SetSize(parent:GetWidth() - 20, MODERN_UI.ITEM_HEIGHT)
     itemFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
 
-    itemFrame:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true,
-        tileSize = 8,
-        edgeSize = 8,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 }
-    })
+    itemFrame:SetBackdrop(CreateStandardBackdrop(true))
     itemFrame:SetBackdropColor(unpack(COLORS.ITEM_BG))
     itemFrame:SetBackdropBorderColor(unpack(COLORS.BORDER))
 
@@ -629,58 +646,32 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
     })
     iconFrame:SetBackdropBorderColor(0.8, 0.8, 0.8, 0.8)
     
-    -- Icon click handler (same as item text)
+    -- Icon click handler
     if itemData.itemID then
         iconFrame:SetScript("OnClick", function()
-            local itemLink = select(2, C_Item.GetItemInfo(itemData.itemID))
-            if itemLink and ChatEdit_GetActiveWindow() then
-                ChatEdit_InsertLink(itemLink)
-            elseif itemLink then
-                print("Item Link: " .. itemLink)
-            end
+            HandleItemClick(itemData.itemID)
         end)
         
         iconFrame:SetScript("OnEnter", function()
             iconFrame:SetBackdropBorderColor(1, 1, 0, 1) -- Yellow border on hover
-            if itemData.itemID then
-                BiSTracker.Utils.ShowItemTooltip(itemData.itemID, iconFrame)
-            end
+            ShowItemTooltipSafely(itemData.itemID, iconFrame)
         end)
         
         iconFrame:SetScript("OnLeave", function()
             iconFrame:SetBackdropBorderColor(0.8, 0.8, 0.8, 0.8) -- Normal border
-            BiSTracker.Utils.HideItemTooltip()
+            HideItemTooltipSafely()
         end)
     end
 
-    -- Hover effect
+    -- Hover effect for main frame
     itemFrame:EnableMouse(true)
     itemFrame:SetScript("OnEnter", function()
         itemFrame:SetBackdropColor(unpack(COLORS.ITEM_BG_HOVER))
-
-        -- Show item tooltip with comparison support
-        if itemData.itemID then
-            BiSTracker.Utils.ShowItemTooltip(itemData.itemID, itemFrame)
-        end
+        ShowItemTooltipSafely(itemData.itemID, itemFrame)
     end)
     itemFrame:SetScript("OnLeave", function()
         itemFrame:SetBackdropColor(unpack(COLORS.ITEM_BG))
-        BiSTracker.Utils.HideItemTooltip()
-    end)
-    itemFrame:SetScript("OnKeyDown", function(self, key)
-        if key == "LSHIFT" then
-            -- Show item tooltip with comparison support
-            if itemData.itemID then
-                print("Shift key pressed - showing comparison tooltip")
-                BiSTracker.Utils.ShowItemTooltip(itemData.itemID, itemFrame)
-            end
-        end
-    end)
-    itemFrame:SetScript("OnKeyUp", function(self, key)
-        if key == "LSHIFT" then
-            -- Hide tooltip when shift is released
-            BiSTracker.Utils.HideItemTooltip()
-        end
+        HideItemTooltipSafely()
     end)
 
     -- Slot name
@@ -703,45 +694,16 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
         itemButton:EnableMouse(true)
         itemButton:SetFrameLevel(itemFrame:GetFrameLevel() + 2)
 
-        -- Set cursor to indicate clickability
-        itemButton:SetAttribute("type", "macro")
-        itemButton:SetAttribute("macrotext", "")
         itemButton:SetScript("OnClick", function()
-            -- Insert item link into chat using modern API
-            local itemLink = select(2, C_Item.GetItemInfo(itemData.itemID))
-            if itemLink and ChatEdit_GetActiveWindow() then
-                ChatEdit_InsertLink(itemLink)
-            elseif itemLink then
-                -- Fallback: print to chat if no active chat window
-                print("Item Link: " .. itemLink)
-            end
+            HandleItemClick(itemData.itemID)
         end)
         itemButton:SetScript("OnEnter", function()
             itemText:SetTextColor(1, 1, 0, 1) -- Yellow on hover
-
-            -- Show item tooltip with comparison support
-            if itemData.itemID then
-                BiSTracker.Utils.ShowItemTooltip(itemData.itemID, itemFrame)
-            end
-        end)
-        itemFrame:SetScript("OnKeyDown", function(self, key)
-            if key == "LSHIFT" then
-                -- Show item tooltip with comparison support
-                if itemData.itemID then
-                    print("Shift key pressed - showing comparison tooltip")
-                    BiSTracker.Utils.ShowItemTooltip(itemData.itemID, itemFrame)
-                end
-            end
-        end)
-        itemFrame:SetScript("OnKeyUp", function(self, key)
-            if key == "LSHIFT" then
-                -- Hide tooltip when shift is released
-                BiSTracker.Utils.HideItemTooltip()
-            end
+            ShowItemTooltipSafely(itemData.itemID, itemFrame)
         end)
         itemButton:SetScript("OnLeave", function()
             itemText:SetTextColor(1, 1, 1, 1) -- White normally
-            BiSTracker.Utils.HideItemTooltip()
+            HideItemTooltipSafely()
         end)
     end
 
@@ -787,10 +749,8 @@ function BiSTracker.ModernUI.CreateSettingsContent()
     if not mainFrame or not mainFrame.content then return end
 
     local settingsFrame = CreateFrame("Frame", nil, mainFrame.content)
-    settingsFrame:SetPoint("TOPLEFT", mainFrame.content, "TOPLEFT", MODERN_UI.CONTENT_PADDING, -MODERN_UI
-    .CONTENT_PADDING)
-    settingsFrame:SetPoint("BOTTOMRIGHT", mainFrame.content, "BOTTOMRIGHT", -MODERN_UI.CONTENT_PADDING,
-        MODERN_UI.CONTENT_PADDING)
+    settingsFrame:SetPoint("TOPLEFT", mainFrame.content, "TOPLEFT", MODERN_UI.CONTENT_PADDING, -MODERN_UI.CONTENT_PADDING)
+    settingsFrame:SetPoint("BOTTOMRIGHT", mainFrame.content, "BOTTOMRIGHT", -MODERN_UI.CONTENT_PADDING, MODERN_UI.CONTENT_PADDING)
 
     -- Settings title
     local title = settingsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
@@ -801,12 +761,10 @@ function BiSTracker.ModernUI.CreateSettingsContent()
     local yOffset = -50
 
     -- Test Alert Button
-    local testButton = CreateFrame("Button", nil, settingsFrame, "UIPanelButtonTemplate")
+    local testButton = CreateButtonWithMouseEvents(settingsFrame, "UIPanelButtonTemplate")
     testButton:SetSize(140, 30)
     testButton:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, yOffset)
     testButton:SetText("Test Alert")
-    testButton:EnableMouse(true)
-    testButton:SetFrameLevel(settingsFrame:GetFrameLevel() + 1)
     testButton:SetScript("OnClick", function()
         if BiSTracker.Alerts and BiSTracker.Alerts.SendTestAlert then
             BiSTracker.Alerts.SendTestAlert()
@@ -833,12 +791,10 @@ function BiSTracker.ModernUI.CreateSettingsContent()
     yOffset = yOffset - 20
 
     -- Reset button
-    local resetButton = CreateFrame("Button", nil, settingsFrame, "UIPanelButtonTemplate")
+    local resetButton = CreateButtonWithMouseEvents(settingsFrame, "UIPanelButtonTemplate")
     resetButton:SetSize(120, 30)
     resetButton:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, yOffset)
     resetButton:SetText("Reset All")
-    resetButton:EnableMouse(true)
-    resetButton:SetFrameLevel(settingsFrame:GetFrameLevel() + 1)
     resetButton:SetScript("OnClick", function()
         StaticPopup_Show("BISTRACKER_MODERN_RESET_CONFIRM")
     end)
@@ -871,11 +827,9 @@ function BiSTracker.ModernUI.CreateModernCheckbox(parent, anchor, yOffset, text,
     checkboxFrame:SetSize(parent:GetWidth(), 25)
     checkboxFrame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, yOffset)
 
-    local checkbox = CreateFrame("CheckButton", nil, checkboxFrame, "InterfaceOptionsCheckButtonTemplate")
+    local checkbox = CreateButtonWithMouseEvents(checkboxFrame, "InterfaceOptionsCheckButtonTemplate")
     checkbox:SetSize(24, 24)
     checkbox:SetPoint("LEFT", checkboxFrame, "LEFT", 0, 0)
-    checkbox:EnableMouse(true)
-    checkbox:SetFrameLevel(checkboxFrame:GetFrameLevel() + 1)
 
     -- Safety check for Settings module
     local isChecked = false
@@ -1024,9 +978,7 @@ function BiSTracker.ModernUI.ToggleMainFrame()
     if not mainFrame then return end
 
     if mainFrame:IsShown() then
-        -- Clean up keyboard handling before hiding
-        mainFrame:EnableKeyboard(false)
-        mainFrame:SetPropagateKeyboardInput(false)
+        CleanupKeyboardHandling(mainFrame)
         mainFrame:Hide()
     else
         mainFrame:Show()
@@ -1035,17 +987,15 @@ function BiSTracker.ModernUI.ToggleMainFrame()
         BiSTracker.ModernUI.RefreshContent()
 
         -- Set up escape key handling when window is shown
+        mainFrame:EnableKeyboard(true)
         mainFrame:SetPropagateKeyboardInput(true)
         mainFrame:SetScript("OnKeyDown", function(self, key)
             if key == "ESCAPE" then
                 self:Hide()
-                self:SetPropagateKeyboardInput(false)
                 return
             end
-            -- Let other keys propagate
             self:SetPropagateKeyboardInput(true)
         end)
-        mainFrame:EnableKeyboard(true)
     end
 end
 

@@ -148,12 +148,13 @@ function BiSTracker.ModernUI.CreateHeader()
     title:SetText("BiS Tracker")
     title:SetTextColor(unpack(COLORS.TEXT_GOLD))
     
-    -- Class/Spec info
+    -- Class/Spec info - show loot specialization
     local playerClassName = UnitClass("player")
-    local _, specName = GetSpecializationInfo(GetSpecialization() or 1)
+    local specName = BiSTracker.Utils.GetLootSpecDisplayName() or "No Spec"
+    
     local classSpecText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     classSpecText:SetPoint("LEFT", title, "RIGHT", 10, 0)
-    classSpecText:SetText("(" .. (playerClassName or "Unknown") .. " - " .. (specName or "No Spec") .. ")")
+    classSpecText:SetText("(" .. (playerClassName or "Unknown") .. " - " .. specName .. ")")
     classSpecText:SetTextColor(unpack(COLORS.TEXT_GRAY))
     
     -- Close button
@@ -515,7 +516,7 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
             
             -- Show item tooltip
             if itemData.itemID then
-                GameTooltip:SetOwner(itemButton, "ANCHOR_RIGHT")
+                GameTooltip:SetOwner(itemFrame, "ANCHOR_RIGHT")
                 GameTooltip:SetItemByID(itemData.itemID)
                 GameTooltip:Show()
             end
@@ -692,18 +693,19 @@ function BiSTracker.ModernUI.ShowNoDataMessage()
     noDataText:SetText("No BiS data available")
     noDataText:SetTextColor(unpack(COLORS.TEXT_RED))
     
-    -- Add more helpful subtitle
+    -- Add more helpful subtitle showing loot specialization
     local playerClassName = UnitClass("player")
-    local _, specName = GetSpecializationInfo(GetSpecialization() or 1)
+    local specName = BiSTracker.Utils and BiSTracker.Utils.GetLootSpecDisplayName and BiSTracker.Utils.GetLootSpecDisplayName() or "No Specialization"
+    
     local subtitleText = noDataFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     subtitleText:SetPoint("TOP", noDataText, "BOTTOM", 0, -10)
-    subtitleText:SetText("For: " .. (playerClassName or "Unknown Class") .. " - " .. (specName or "No Specialization"))
+    subtitleText:SetText("For: " .. (playerClassName or "Unknown Class") .. " - " .. specName)
     subtitleText:SetTextColor(unpack(COLORS.TEXT_GRAY))
     
     -- Add instruction text
     local instructionText = noDataFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     instructionText:SetPoint("TOP", subtitleText, "BOTTOM", 0, -20)
-    instructionText:SetText("Make sure you have selected a specialization and the addon data is up to date.")
+    instructionText:SetText("Make sure your loot specialization is set correctly and the addon data is up to date.")
     instructionText:SetTextColor(unpack(COLORS.TEXT_GRAY))
 end
 

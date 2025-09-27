@@ -46,17 +46,65 @@ function BiSTracker.Utils.GetCurrentPlayerClassAndSpec()
         return nil
     end
     
-    local specIndex = GetSpecialization()
+    -- Use loot specialization instead of current specialization
+    local lootSpecID = GetLootSpecialization()
+    local specIndex
+    
+    if lootSpecID == 0 then
+        -- Loot spec is set to "Current Spec", so use current specialization
+        specIndex = GetSpecialization()
+        BiSTracker.Utils.PrintDebug("Using current specialization (loot spec set to current)")
+    else
+        -- Convert loot spec ID to spec index
+        for i = 1, GetNumSpecializations() do
+            local specID = GetSpecializationInfo(i)
+            if specID == lootSpecID then
+                specIndex = i
+                break
+            end
+        end
+        BiSTracker.Utils.PrintDebug("Using loot specialization ID: " .. lootSpecID)
+    end
+    
     if not specIndex then
+        BiSTracker.Utils.PrintDebug("No valid specialization found")
         return nil
     end
     
     local _, specName = GetSpecializationInfo(specIndex)
     if not specName then
+        BiSTracker.Utils.PrintDebug("Could not get specialization name for index: " .. specIndex)
         return nil
     end
     
-    return englishClassName:lower() .. "_" .. specName:lower()
+    local result = englishClassName:lower() .. "_" .. specName:lower()
+    BiSTracker.Utils.PrintDebug("Class/Spec result: " .. result)
+    return result
+end
+
+-- Helper function to get loot specialization display name
+---@return string specName Display name of the current loot specialization
+function BiSTracker.Utils.GetLootSpecDisplayName()
+    local lootSpecID = GetLootSpecialization()
+    
+    if lootSpecID == 0 then
+        -- Loot spec is set to "Current Spec"
+        local specIndex = GetSpecialization()
+        if specIndex then
+            local _, specName = GetSpecializationInfo(specIndex)
+            return specName or "No Spec"
+        end
+        return "Current Spec (None Selected)"
+    else
+        -- Find the spec name from loot spec ID
+        for i = 1, GetNumSpecializations() do
+            local specID, name = GetSpecializationInfo(i)
+            if specID == lootSpecID then
+                return name or "Unknown"
+            end
+        end
+        return "Unknown Loot Spec"
+    end
 end
 
 ---@param itemID number

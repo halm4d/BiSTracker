@@ -54,11 +54,16 @@ end
 ---@param value any New value
 function BiSTracker.Settings.OnSettingChanged(key, value)
     if key == "enableAlerts" then
-        BiSTracker.Events.UpdateLootEventRegistration()
-    elseif key == "showMinimap" then
-        BiSTracker.UI.UpdateMinimapButtonVisibility()
+        if BiSTracker.Events and BiSTracker.Events.UpdateLootEventRegistration then
+            BiSTracker.Events.UpdateLootEventRegistration()
+        end
     elseif key == "debugMode" then
         BiSTracker.Utils.PrintDebug("Debug mode " .. (value and "enabled" or "disabled"))
+    end
+    
+    -- Notify UIManager of all setting changes
+    if BiSTracker.UIManager and BiSTracker.UIManager.OnSettingChanged then
+        BiSTracker.UIManager.OnSettingChanged(key, value)
     end
 end
 

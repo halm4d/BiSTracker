@@ -17,10 +17,8 @@ SlashCmdList["BISTRACKER"] = function(msg)
     if command == "show" or command == "" then
         BiSTracker.Commands.ShowBiSList()
     elseif command == "ui" or command == "window" then
-        if BiSTracker.ModernUI and BiSTracker.ModernUI.ToggleMainFrame then
-            BiSTracker.ModernUI.ToggleMainFrame()
-        elseif BiSTracker.UI and BiSTracker.UI.ToggleMainFrame then
-            BiSTracker.UI.ToggleMainFrame()
+        if BiSTracker.UIManager and BiSTracker.UIManager.ToggleMainWindow then
+            BiSTracker.UIManager.ToggleMainWindow()
         else
             BiSTracker.Utils.PrintError("UI module not loaded")
         end
@@ -43,7 +41,11 @@ end
 SLASH_BISSETTINGS1 = "/bissettings"
 SLASH_BISSETTINGS2 = "/bistrackersettings"
 SlashCmdList["BISSETTINGS"] = function()
-    BiSTracker.SettingsUI.OpenSettings()
+    if BiSTracker.UIManager and BiSTracker.UIManager.OpenSettings then
+        BiSTracker.UIManager.OpenSettings()
+    else
+        BiSTracker.Utils.PrintError("Settings UI not available")
+    end
 end
 
 -- Alerts toggle command

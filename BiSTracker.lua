@@ -12,17 +12,31 @@ function BiSTracker:Initialize()
         return
     end
 
-    -- Initialize settings first
-    self.Settings.Initialize()
+    -- Initialize core systems first
+    if self.Settings and self.Settings.Initialize then
+        self.Settings.Initialize()
+    end
 
-    -- Initialize UI components
-    self.UI.Initialize()
-    self.ModernUI.Initialize()  -- Initialize the new modern UI
-    self.SettingsUI.Initialize()
+    -- Initialize all UI components via UIManager
+    if self.UIManager and self.UIManager.Initialize then
+        self.UIManager.Initialize()
+    else
+        -- Fallback initialization if UIManager isn't available
+        if self.ModernUI and self.ModernUI.Initialize then
+            self.ModernUI.Initialize()
+        end
+        if self.MinimapUI and self.MinimapUI.Initialize then
+            self.MinimapUI.Initialize()
+        end
+        if self.SettingsUI and self.SettingsUI.Initialize then
+            self.SettingsUI.Initialize()
+        end
+    end
 
     -- Mark as initialized
     self.initialized = true
-
+    
+    print("BiS Tracker loaded successfully")
 end
 
 -- Register initialization event

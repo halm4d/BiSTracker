@@ -2,6 +2,31 @@
 
 All notable changes to BiS Tracker will be documented in this file.
 
+## [1.2.0] - 2025-09-27
+
+### Architecture Refactoring
+- **MAJOR REFACTOR**: Complete UI architecture overhaul for better maintainability
+  - Replaced monolithic `MainUI.lua` with modular components:
+    - `UIManager.lua`: Coordinates all UI components
+    - `MinimapUI.lua`: Dedicated minimap button management
+    - `ModernUI.lua`: Enhanced as the primary UI (now self-contained)
+  - Eliminated code duplication between UI modules
+  - Improved separation of concerns across components
+  - Better cross-component communication via UIManager
+  - Cleaner initialization process
+  - Removed circular dependencies
+
+### Improved
+- ModernUI is now completely self-contained with no external UI dependencies
+- Settings changes now properly propagate across all UI components
+- More robust error handling and fallback mechanisms
+- Better debug output and initialization logging
+
+### Technical
+- Updated .toc file to reflect new architecture
+- All slash commands now route through UIManager for consistency
+- Settings callbacks refactored for better modularity
+
 ## [1.1.0] - 2025-09-27
 
 ### Added

@@ -846,9 +846,9 @@ function BiSTracker.ModernUI.CreateModernCheckbox(parent, anchor, yOffset, text,
     checkbox:SetScript("OnClick", function(self)
         if BiSTracker.Settings and BiSTracker.Settings.Set then
             BiSTracker.Settings.Set(settingKey, self:GetChecked())
-            -- Special handling for minimap button
-            if settingKey == "showMinimap" and BiSTracker.UI and BiSTracker.UI.UpdateMinimapButtonVisibility then
-                BiSTracker.UI.UpdateMinimapButtonVisibility()
+            -- Notify UIManager of setting changes
+            if BiSTracker.UIManager and BiSTracker.UIManager.OnSettingChanged then
+                BiSTracker.UIManager.OnSettingChanged(settingKey, self:GetChecked())
             end
         end
     end)

@@ -93,8 +93,8 @@ function BiSTracker.Events.OnPlayerEnteringWorld(event, isLogin, isReload)
     
     if isLogin then
         -- Initialize UI after login
-        if BiSTracker.UI and BiSTracker.UI.Initialize then
-            BiSTracker.UI.Initialize()
+        if BiSTracker.UIManager and BiSTracker.UIManager.Initialize then
+            BiSTracker.UIManager.Initialize()
         end
     end
 end

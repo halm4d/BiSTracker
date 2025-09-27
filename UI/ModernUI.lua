@@ -473,6 +473,65 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
     itemFrame:SetBackdropColor(unpack(COLORS.ITEM_BG))
     itemFrame:SetBackdropBorderColor(unpack(COLORS.BORDER))
 
+    -- Item icon
+    local itemIcon = itemFrame:CreateTexture(nil, "ARTWORK")
+    itemIcon:SetSize(32, 32)
+    itemIcon:SetPoint("LEFT", itemFrame, "LEFT", 8, 0)
+    
+    -- Set the item icon if we have an itemID
+    if itemData.itemID then
+        local itemTexture = C_Item.GetItemIconByID(itemData.itemID)
+        if itemTexture then
+            itemIcon:SetTexture(itemTexture)
+        else
+            -- Fallback: use a default icon
+            itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+        end
+    else
+        itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    end
+
+    -- Make icon clickable and add border for better visibility
+    local iconFrame = CreateFrame("Button", nil, itemFrame, "BackdropTemplate")
+    iconFrame:SetPoint("LEFT", itemFrame, "LEFT", 8, 0)
+    iconFrame:SetSize(32, 32)
+    iconFrame:EnableMouse(true)
+    iconFrame:SetFrameLevel(itemFrame:GetFrameLevel() + 1)
+    
+    -- Add backdrop border to icon
+    iconFrame:SetBackdrop({
+        bgFile = nil,
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = false,
+        edgeSize = 8,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 }
+    })
+    iconFrame:SetBackdropBorderColor(0.8, 0.8, 0.8, 0.8)
+    
+    -- Icon click handler (same as item text)
+    if itemData.itemID then
+        iconFrame:SetScript("OnClick", function()
+            local itemLink = select(2, C_Item.GetItemInfo(itemData.itemID))
+            if itemLink and ChatEdit_GetActiveWindow() then
+                ChatEdit_InsertLink(itemLink)
+            elseif itemLink then
+                print("Item Link: " .. itemLink)
+            end
+        end)
+        
+        iconFrame:SetScript("OnEnter", function()
+            iconFrame:SetBackdropBorderColor(1, 1, 0, 1) -- Yellow border on hover
+            if itemData.itemID then
+                BiSTracker.Utils.ShowItemTooltip(itemData.itemID, iconFrame)
+            end
+        end)
+        
+        iconFrame:SetScript("OnLeave", function()
+            iconFrame:SetBackdropBorderColor(0.8, 0.8, 0.8, 0.8) -- Normal border
+            BiSTracker.Utils.HideItemTooltip()
+        end)
+    end
+
     -- Hover effect
     itemFrame:EnableMouse(true)
     itemFrame:SetScript("OnEnter", function()
@@ -505,7 +564,7 @@ function BiSTracker.ModernUI.CreateModernItemFrame(parent, slotData, itemData, y
 
     -- Slot name
     local slotText = itemFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    slotText:SetPoint("TOPLEFT", itemFrame, "TOPLEFT", 12, -8)
+    slotText:SetPoint("TOPLEFT", itemFrame, "TOPLEFT", 48, -8) -- Moved right to make room for icon
     slotText:SetText(slotData.Slot)
     slotText:SetTextColor(unpack(COLORS.TEXT_GOLD))
 

@@ -194,5 +194,35 @@ function BiSTracker.Utils.DefaultValue(value, default)
     return value ~= nil and value or default
 end
 
+-- Shows item tooltip with comparison support
+---@param itemID number The item ID to show tooltip for
+---@param owner Frame The frame that owns the tooltip
+function BiSTracker.Utils.ShowItemTooltip(itemID, owner)
+    if not itemID or not owner then return end
+    
+    -- Get the item link
+    local itemLink = select(2, C_Item.GetItemInfo(itemID))
+    if not itemLink then
+        -- Item not in cache, try to load it
+        C_Item.RequestLoadItemDataByID(itemID)
+        -- Show basic tooltip for now
+        GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+        GameTooltip:SetItemByID(itemID)
+        GameTooltip:Show()
+        return
+    end
+    
+    -- Show the tooltip
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetHyperlink(itemLink)
+
+    GameTooltip:Show()
+end
+
+-- Hides item tooltip and comparison tooltips
+function BiSTracker.Utils.HideItemTooltip()
+    GameTooltip:Hide()
+end
+
 -- Export
 _G.BiSTracker = BiSTracker

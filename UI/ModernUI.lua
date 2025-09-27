@@ -827,9 +827,11 @@ function BiSTracker.ModernUI.CreateModernCheckbox(parent, anchor, yOffset, text,
     checkboxFrame:SetSize(parent:GetWidth(), 25)
     checkboxFrame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, yOffset)
 
-    local checkbox = CreateButtonWithMouseEvents(checkboxFrame, "InterfaceOptionsCheckButtonTemplate")
+    local checkbox = CreateFrame("CheckButton", nil, checkboxFrame, "InterfaceOptionsCheckButtonTemplate")
     checkbox:SetSize(24, 24)
     checkbox:SetPoint("LEFT", checkboxFrame, "LEFT", 0, 0)
+    checkbox:EnableMouse(true)
+    checkbox:SetFrameLevel(checkboxFrame:GetFrameLevel() + 1)
 
     -- Safety check for Settings module
     local isChecked = false

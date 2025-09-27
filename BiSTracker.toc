@@ -2,7 +2,7 @@
 ## Title: BiS Tracker
 ## Notes: Best-in-slot item tracker
 ## Author: Halm4D
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: BiSTrackerDB
 
 # Core files

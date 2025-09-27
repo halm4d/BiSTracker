@@ -2,7 +2,7 @@
 
 All notable changes to BiS Tracker will be documented in this file.
 
-## [1.0.0] - 2025-09-27
+## [1.0.1] - 2025-09-27
 
 ### Added
 - Initial release of BiS Tracker addon

@@ -33,21 +33,31 @@ function BiSTracker.MinimapUI.CreateMinimapButton()
     end
 
     minimapButton = CreateFrame("Button", "BiSTrackerMinimapButton", Minimap)
-    minimapButton:SetSize(BiSTracker.Constants.UI.MINIMAP_BUTTON_SIZE, BiSTracker.Constants.UI.MINIMAP_BUTTON_SIZE)
-    minimapButton:SetFrameStrata("MEDIUM")
-    minimapButton:SetFrameLevel(8)
-    minimapButton:SetMovable(true)
-    minimapButton:EnableMouse(true)
-    minimapButton:RegisterForDrag("LeftButton")
+    minimapButton:SetSize(31, 31)  -- Match standard minimap button size
+	minimapButton:SetFrameStrata("MEDIUM")
+	minimapButton:SetFixedFrameStrata(true)
+	minimapButton:SetFrameLevel(8)
+	minimapButton:SetFixedFrameLevel(true)
+	minimapButton:SetSize(31, 31)
+	minimapButton:RegisterForClicks("AnyUp")
+	minimapButton:RegisterForDrag("LeftButton")
+	minimapButton:SetHighlightTexture(136477) --"Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight"
 
     -- Position on minimap
     local position = BiSTracker.Settings.Get("minimapPosition") or 45
     BiSTracker.MinimapUI.PositionMinimapButton(position)
 
-    -- Texture
+    
+    -- Border (overlay on top)
+    local border = minimapButton:CreateTexture(nil, "OVERLAY")
+    border:SetSize(50, 50)  -- Same size as button
+    border:SetPoint("TOPLEFT", minimapButton, "TOPLEFT")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    
+    -- Texture (icon)
     local texture = minimapButton:CreateTexture(nil, "BACKGROUND")
-    texture:SetSize(24, 24)
-    texture:SetPoint("CENTER")
+    texture:SetSize(24, 24)  -- Smaller than button to leave room for border
+    texture:SetPoint("CENTER", minimapButton, "CENTER")
     texture:SetTexture("Interface\\Icons\\INV_Jewelry_Ring_Ahnqiraj_02")
 
     -- Event handlers
